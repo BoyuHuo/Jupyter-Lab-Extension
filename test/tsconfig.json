@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES6",
+    "outDir": "./build",
+    "lib": ["ES6", "DOM"],
+    "types": ["mocha", "expect.js", "node"]
+  },
+  "include": ["src/*"]
+}

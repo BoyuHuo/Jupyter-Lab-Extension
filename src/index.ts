@@ -1,66 +1,108 @@
-import {
-  JupyterLab, JupyterLabPlugin
-} from '@jupyterlab/application';
-import {
-  ICommandPalette
-} from '@jupyterlab/apputils';
+// Copyright (c) Jupyter Development Team.
+// Distributed under the terms of the Modified BSD License.
 
 import '../style/index.css';
 
 import {
-  Widget
-} from '@phosphor/widgets';
+  ILayoutRestorer,
+  JupyterLab,
+  JupyterLabPlugin
+} from '@jupyterlab/application';
 
-import{
-  TestWidget
-} from './test'
+import { ICommandPalette } from '@jupyterlab/apputils';
 
+import { ISettingRegistry } from '@jupyterlab/coreutils';
+
+import { IDocumentManager } from '@jupyterlab/docmanager';
+
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+
+import { IMainMenu } from '@jupyterlab/mainmenu';
+import { PanelLayout } from '@phosphor/widgets';
+
+import { NebulaFileBrowser } from './browser';
 
 /**
- * Initialization data for the testextension extension.
+ * The command IDs used by the plugins.
  */
+namespace CommandIDs {
+  export const clear = 'chatbox:clear';
 
-const extension: JupyterLabPlugin<void> = {
-  id: 'jupyterlab_xkcd',
-  autoStart: true,
-  requires: [ICommandPalette],
-  activate: activate
+  export const run = 'chatbox:post';
+
+  export const linebreak = 'chatbox:linebreak';
+
+  export const shareCurrent = `google-drive:share-current`;
+
+  export const shareBrowser = `google-drive:share-browser-item`;
+}
+
+/**
+ * The JupyterLab plugin for the Google Drive Filebrowser.
+ */
+const fileBrowserPlugin: JupyterLabPlugin<void> = {
+  id: '@jupyterlab/google-drive:drive',
+  requires: [
+    ICommandPalette,
+    IDocumentManager,
+    IFileBrowserFactory,
+    ILayoutRestorer,
+    IMainMenu,
+    ISettingRegistry
+  ],
+  activate: activateFileBrowser,
+  autoStart: true
 };
 
-function activate(app: JupyterLab, palette: ICommandPalette){
-    console.log('JupyterLab extension testextension is activated!');
-    console.log('Woohahahahaha');
+/**
+ * Activate the file browser.
+ */
+function activateFileBrowser(
+  app: JupyterLab,
+  palette: ICommandPalette,
 
-    let widget: Widget = new TestWidget();
-    widget.id = 'test-jupyterlab';
-    widget.title.label = 'test.com';
-    widget.title.closable = true;
+  restorer: ILayoutRestorer,
+  mainMenu: IMainMenu
+): void {
+  console.log('Hahohohohsdfdsfdsf');
 
-    // Add an application command
-    const command: string = 'xkcd:open';
-    app.commands.addCommand(command, {
-      label: 'pisces-test',
-      execute: () => {
-        if (!widget.isAttached) {
-          // Attach the widget to the main work area if it's not there
-          app.shell.addToMainArea(widget);
-        }
-        // Activate the widget
-        app.shell.activateById(widget.id);
+  // Add the Google Drive backend to the contents manager.
 
-        widget.addClass('nebula-test'); // new line
+  // Construct a function that determines whether any documents
+  // associated with this filebrowser are currently open.
 
-        // Add an image element to the panel
-        let img = document.createElement('img');
-        widget.node.appendChild(img);
+  // Create the file browser.
+  const browser = new NebulaFileBrowser();
 
-        // Fetch the picture
-        img.src = "https://nebula-ai.com/imgs/logo_181205.png";
+  browser.title.iconClass = 'jp-GoogleDrive-icon jp-SideBar-tabIcon';
+  browser.title.caption = 'Google Drive';
+  browser.id = 'google-drive-file-browser';
+  browser.layout = new PanelLayout();
 
-      }
-    });
+  // Add the file browser widget to the application restorer.
+  app.shell.addToLeftArea(browser, { rank: 101 });
+  // matches only non-directory items in the Google Drive browser.
+  const selector =
+    '.jp-GoogleDriveFileBrowser .jp-DirListing-item[data-isdir="false"]';
 
-    palette.addItem({ command, category: 'Tutorial' });
-  }
+  app.contextMenu.addItem({
+    command: CommandIDs.shareBrowser,
+    selector,
+    rank: 100
+  });
 
-export default extension;
+  palette.addItem({
+    command: CommandIDs.shareCurrent,
+    category: 'File Operations'
+  });
+
+  mainMenu.fileMenu.addGroup([{ command: CommandIDs.shareCurrent }], 20);
+
+  return;
+}
+
+/**
+ * Export the plugins as default.
+ */
+const plugins: JupyterLabPlugin<any>[] = [fileBrowserPlugin];
+export default plugins;

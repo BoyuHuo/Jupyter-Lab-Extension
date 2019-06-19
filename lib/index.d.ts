@@ -1,7 +1,7 @@
-import { JupyterLabPlugin } from '@jupyterlab/application';
 import '../style/index.css';
+import { JupyterLabPlugin } from '@jupyterlab/application';
 /**
- * Initialization data for the testextension extension.
+ * Export the plugins as default.
  */
-declare const extension: JupyterLabPlugin<void>;
-export default extension;
+declare const plugins: JupyterLabPlugin<any>[];
+export default plugins;
